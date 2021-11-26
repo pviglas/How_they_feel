@@ -1,7 +1,6 @@
 import requests
 import json
 import pandas as pd
-import sklearn as sk
 # from pandas import DataFrame
 import urllib
 import argparse
@@ -95,27 +94,32 @@ def group_articles(json_dict, topic_name):
     return articles_df
 
 
-def count_strings(X, y):
-    pattern = r'\b{}\b'.format('|'.join(y))
-    return X['text'].str.count(pattern)
-
-
 def find_viewpoint(articles_df):
     happy_emotions = ['happy', '']  # y
     sad_emotions = []  # y
 
-    string_transformer = sk.preprocessing.FunctionTransformer(count_strings,
-                                                              kw_args={
-                                                            'y': happy_emotions})
+   # string_transformer = sk.preprocessing.FunctionTransformer(count_strings,
+    #                                                          kw_args={
+     #                                                       'y': happy_emotions})
 
     # df['count'] = string_transformer.fit_transform(X=df)
 
 
 def main():
     parser = argparse.ArgumentParser(description='Search for a topic.')
-    parser.add_argument('topic', type=str, help='Given topic name.')
+    parser.add_argument('topic', type=str, help='Topic name.')
+
     parser.add_argument('-f', '--feelings', action='store_true',
-                        help='Searching for points of view, about the topic.')
+                        help='Searching for viewpoints, about the topic.')
+
+    parser.add_argument('-v', '--viewpoint', type=str, choices=['happy', 'sad',
+                                                                'neutral'],
+                        help='Shows articles that match the viewpoint.')
+
+    parser.add_argument('-y', '--year', type=int, choices=range(2000, 2021),
+                        metavar='Range: 2000-2021',
+                        help='Shows articles for the given year.')
+
     args = parser.parse_args()
 
     print("args print:", args.topic)
