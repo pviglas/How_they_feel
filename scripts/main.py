@@ -29,7 +29,7 @@ def insert_dummy_entries(articles_df, topic_name):
     temp_df = pd.DataFrame([{'Title': 'dummy_1',
                              'Source_name': 'dummy_1',
                              'Description': 'dummy_1',
-                             'Date': '2021',
+                             'Date': '2020',
                              'Content': temp_str,
                              'url': 'dummy_url',
                              'Topic': topic_name,
@@ -43,7 +43,7 @@ def insert_dummy_entries(articles_df, topic_name):
     temp_df = pd.DataFrame([{'Title': 'dummy_2',
                              'Source_name': 'dummy_2',
                              'Description': 'dummy_2',
-                             'Date': '2021',
+                             'Date': '2019',
                              'Content': temp_str2,
                              'url': 'dummy_url',
                              'Topic': topic_name,
@@ -112,13 +112,17 @@ def group_articles(json_dict, topic_name):
         title = str(article['title'])
         description = str(article['description'])
         url = str(article['url'])
+
         publication_date = str(article['publishedAt'])
+        filter_year_only = publication_date.split("-", 1)
+        publication_year_only = filter_year_only[0]
+
         content = str(article['content'])  # truncated to 200 chars, by the api
 
         temp_df = pd.DataFrame([{'Title': title,
                                  'Source_name': source_name,
                                  'Description': description,
-                                 'Date': publication_date,
+                                 'Date': publication_year_only,
                                  'Content': content.lower(),
                                  # lowercase for string match later
                                  'url': url,
@@ -138,6 +142,7 @@ def group_articles(json_dict, topic_name):
 
 
 def find_viewpoint(articles_df):
+
     # 2 Categories of emotions
     # Searching for them in article.Content and count them
     happy_emotions = ['happy', 'excited', 'good', 'amazing', 'better',
@@ -164,7 +169,9 @@ def find_viewpoint(articles_df):
     return articles_df
 
 
-def display_viewpoints(articles_df, topic_name):
+def display_viewpoints(articles_df, topic_name, selected_emotion,
+                       selected_year):
+
     number_of_articles = articles_df.shape[0]
     happy_counter = len(
         articles_df[articles_df['Viewpoint'].str.match('Happy')])
@@ -175,46 +182,50 @@ def display_viewpoints(articles_df, topic_name):
     sad_percentage = (sad_counter / number_of_articles) * 100
     neutral_percentage = (neutral_counter / number_of_articles) * 100
 
-    print("Number of articles:", number_of_articles)
-    print("Viewpoints about " + topic_name + ":")
-    print("%.2f" % happy_percentage + "% Happy")
-    print("%.2f" % sad_percentage + "% Sad")
-    print("%.2f" % neutral_percentage + "% Neutral ")
+    if selected_emotion is False and selected_year is False:
+        print("Number of articles:", number_of_articles)
+        print("Viewpoints about " + topic_name + ":")
+        print("%.2f" % happy_percentage + "% Happy")
+        print("%.2f" % sad_percentage + "% Sad")
+        print("%.2f" % neutral_percentage + "% Neutral ")
 
-    # Graphic representation
-    y = np.array([happy_percentage, sad_percentage, neutral_percentage])
-    pie_labels = ["Happy", "Sad", "Neutral"]
-    pie_explode = [0.2, 0, 0]
+        # Graphic representation
+        y = np.array([happy_percentage, sad_percentage, neutral_percentage])
 
-    pie_labes_percentage = [str("%.2f" % happy_percentage) + "% " + "Happy",
-                            str("%.2f" % sad_percentage) + "% " + "Sad",
-                            str("%.2f" % neutral_percentage) + "% " + "Neutral"]
+        pie_labels_percentage = [str("%.2f" % happy_percentage) + "% " + "Happy",
+                                 str("%.2f" % sad_percentage) + "% " + "Sad",
+                                 str("%.2f" % neutral_percentage) + "% " +
+                                 "Neutral"]
+        pie_explode = [0.1, 0.1, 0.1]
 
-    plt.title("Viewpoints about " + topic_name + ":")
-    plt.pie(y, labels=pie_labes_percentage, explode=pie_explode)
+        plt.title("Viewpoints about " + topic_name + ":")
+        plt.pie(y, labels=pie_labels_percentage, explode=pie_explode)
+        plt.show()
 
-    plt.show()
+    elif selected_emotion is True and selected_year is False:
+        print("will print percentage of articles only for the selected emo:")
+        print(selected_emotion)
+
+    elif selected_year:
+        print("",selected_year)
 
 
 def main():
     parser = argparse.ArgumentParser(description='Search for a topic.')
     parser.add_argument('topic', type=str, help='Topic name.')
 
-    parser.add_argument('-f', '--feelings', action='store_true',
+    parser.add_argument('-f', '--feelings', default=False, action='store_true',
                         help='Searching for viewpoints, about the topic.')
 
-    parser.add_argument('-v', '--viewpoint', type=str, choices=['happy', 'sad',
-                                                                'neutral'],
-                        default=False,
-                        help='Shows articles that match the viewpoint.')
+    parser.add_argument('-v', '--viewpoint', default=False, action='store_true',
+                        help='Shows the predominant viewpoint.')
 
     parser.add_argument('-y', '--year', type=int, choices=range(2000, 2021),
                         metavar='Range: 2000-2021', default=False,
-                        help='Shows articles for the given year.')
+                        help='Shows the predominant viewpoint, filtered by'
+                             'year')
 
     args = parser.parse_args()
-
-    print("args print:", args.topic)
 
     if args.feelings:
 
@@ -229,7 +240,7 @@ def main():
 
         find_viewpoint(df_articles)
         print(df_articles)
-        display_viewpoints(df_articles, args.topic)
+        display_viewpoints(df_articles, args.topic, args.viewpoint, args.year)
 
     else:
         print("Shows only sources, not feelings:", args.topic)
