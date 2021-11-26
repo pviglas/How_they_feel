@@ -1,3 +1,5 @@
+# Code owner: Viglas Panagiotis
+
 import requests
 import json
 import pandas as pd
