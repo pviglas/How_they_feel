@@ -270,10 +270,10 @@ def main():
     parser.add_argument('-v', '--viewpoint', default=False, action='store_true',
                         help='Shows the predominant viewpoint.')
 
-    parser.add_argument('-y', '--year', type=int, choices=range(2000, 2022),
-                        metavar='Range: 2000-2021', default=False,
-                        help='Shows the predominant viewpoint, filtered by'
-                             'year')
+    parser.add_argument('-y', '--year', type=int, choices=range(2020, 2022),
+                        metavar='Range: 2020-2021', default=False,
+                        help='Shows the predominant viewpoint, filtered by '
+                             'year.')
 
     args = parser.parse_args()
 
