@@ -6,7 +6,43 @@ import urllib
 import argparse
 import sys
 
-""" -------------- Level 1 -------------- """
+
+def insert_dummy_entries(articles_df,topic_name):
+
+    temp_str = 'sad happy excited sad sad sad' # 4 sad , 2 happy
+    temp_str2 = 'sad happy excited sad sad sad happy happy happy excited' # 4 sad , 6 happy
+
+    temp_df = pd.DataFrame([{'Title': 'mine1',
+                             'Source_name': 'mine1',
+                             'Description': 'mine1',
+                             'Date': 'mine1',
+                             'Content': temp_str,
+                             # lowercase for str compare later
+                             'url': 'oeo',
+                             'Topic': topic_name,
+                             'Viewpoint': 'Neutral',
+                             'Happy_counter': 0,
+                             'Sad_counter': 0}  # Default = Neutral
+                            ])
+
+    articles_df = articles_df.append(temp_df, ignore_index=True)
+
+    temp_df = pd.DataFrame([{'Title': 'mine2',
+                             'Source_name': 'mine1',
+                             'Description': 'mine1',
+                             'Date': 'mine1',
+                             'Content': temp_str2,
+                             # lowercase for str compare later
+                             'url': 'oeo',
+                             'Topic': topic_name,
+                             'Viewpoint': 'Neutral',
+                             'Happy_counter': 0,
+                             'Sad_counter': 0}  # Default = Neutral
+                            ])
+
+    articles_df = articles_df.append(temp_df, ignore_index=True)
+
+    return articles_df
 
 
 def create_json_dict(topic_name):
@@ -95,14 +131,29 @@ def group_articles(json_dict, topic_name):
 
 
 def find_viewpoint(articles_df):
-    happy_emotions = ['happy', '']  # y
-    sad_emotions = []  # y
+    happy_emotions = ['happy', 'excited', 'good', 'amazing', 'better',
+                      'beneficial', 'joy']
+    sad_emotions = ['sad', 'bad', 'unhappy', 'depressed', 'miserable',
+                    'dejected', 'downhearted']
 
-   # string_transformer = sk.preprocessing.FunctionTransformer(count_strings,
-    #                                                          kw_args={
-     #                                                       'y': happy_emotions})
+    happy_pattern = r'\b{}\b'.format('|'.join(happy_emotions))
+    sad_pattern = r'\b{}\b'.format('|'.join(sad_emotions))
 
-    # df['count'] = string_transformer.fit_transform(X=df)
+    articles_df['Happy_counter'] = articles_df.Content.str.count(happy_pattern)
+    articles_df['Sad_counter'] = articles_df.Content.str.count(sad_pattern)
+
+    articles_df.loc[articles_df['Happy_counter'] > articles_df[
+        'Sad_counter'], 'Viewpoint'] = 'Happy'
+
+    articles_df.loc[articles_df['Happy_counter'] < articles_df[
+        'Sad_counter'], 'Viewpoint'] = 'Sad'
+
+    return articles_df
+
+
+def display_viewpoints(articles_df):
+    happy = len(articles_df[articles_df['Viewpoint'].str.match('Happy')])
+    print("happy articles: ", happy)
 
 
 def main():
@@ -138,6 +189,7 @@ def main():
 
         print(type(articles_df))
         print(articles_df)
+        display_viewpoints(articles_df)
 
     else:
         print("Shows only sources, not feelings:", args.topic)
@@ -147,3 +199,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+
