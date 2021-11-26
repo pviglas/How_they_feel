@@ -43,7 +43,7 @@ def insert_dummy_entries(articles_df, topic_name):
     temp_df = pd.DataFrame([{'Title': 'dummy_2',
                              'Source_name': 'dummy_2',
                              'Description': 'dummy_2',
-                             'Date': '2019',
+                             'Date': '2021',
                              'Content': temp_str2,
                              'url': 'dummy_url',
                              'Topic': topic_name,
@@ -169,8 +169,28 @@ def find_viewpoint(articles_df):
     return articles_df
 
 
-def display_viewpoints(articles_df, topic_name, selected_emotion,
-                       selected_year):
+# Filter DataFrame, by given year
+def return_selected_year(articles_df, given_year):
+
+    given_year = str(given_year)
+    year_df = articles_df[articles_df['Date'].str.match(given_year)]
+    print(year_df)
+
+    return year_df
+
+
+def display_predominant_viewpoint(happy, sad, neutral):
+
+    if (happy >= sad) and (happy >= neutral):
+        print("- Most people are Happy, %.2f" % happy + "%")
+    elif (sad >= happy) and (sad >= neutral):
+        print("- Most people are Sad, %.2f" % sad + "%")
+    else:
+        print("- General Viewpoint is Neutral, %.2f"
+              % neutral + "%")
+
+
+def find_emotion_counters(articles_df):
 
     number_of_articles = articles_df.shape[0]
     happy_counter = len(
@@ -178,12 +198,24 @@ def display_viewpoints(articles_df, topic_name, selected_emotion,
     sad_counter = len(articles_df[articles_df['Viewpoint'].str.match('Sad')])
     neutral_counter = number_of_articles - (happy_counter + sad_counter)
 
-    happy_percentage = (happy_counter / number_of_articles) * 100
-    sad_percentage = (sad_counter / number_of_articles) * 100
-    neutral_percentage = (neutral_counter / number_of_articles) * 100
+    return [number_of_articles, happy_counter, sad_counter, neutral_counter]
+
+
+def display_viewpoints(articles_df, topic_name, selected_emotion,
+                       selected_year):
+
+    emotion_counters = find_emotion_counters(articles_df)
+    articles_count = emotion_counters[0]
+    happy_count = emotion_counters[1]
+    sad_count = emotion_counters[2]
+    neutral_count = emotion_counters[3]
+
+    happy_percentage = (happy_count / articles_count) * 100
+    sad_percentage = (sad_count / articles_count) * 100
+    neutral_percentage = (neutral_count / articles_count) * 100
 
     if selected_emotion is False and selected_year is False:
-        print("Number of articles:", number_of_articles)
+        print("Number of articles:", articles_count)
         print("Viewpoints about " + topic_name + ":")
         print("%.2f" % happy_percentage + "% Happy")
         print("%.2f" % sad_percentage + "% Sad")
@@ -203,11 +235,27 @@ def display_viewpoints(articles_df, topic_name, selected_emotion,
         plt.show()
 
     elif selected_emotion is True and selected_year is False:
-        print("will print percentage of articles only for the selected emo:")
-        print(selected_emotion)
-
+        print("Shows the predominant viewpoint, about:", topic_name)
+        display_predominant_viewpoint(happy_percentage, sad_percentage,
+                                      neutral_percentage)
     elif selected_year:
-        print("",selected_year)
+        print("Shows the predominant viewpoint, filtered by year:",
+              selected_year)
+
+        articles_by_year_df = return_selected_year(articles_df, selected_year)
+
+        emotion_by_year = find_emotion_counters(articles_by_year_df)
+        articles_by_year = emotion_by_year[0]
+        happy_by_year = emotion_by_year[1]
+        sad_by_year = emotion_by_year[2]
+        neutral_by_year = emotion_by_year[3]
+
+        happy_percentage = (happy_by_year / articles_by_year) * 100
+        sad_percentage = (sad_by_year / articles_by_year) * 100
+        neutral_percentage = (neutral_by_year / articles_by_year) * 100
+
+        display_predominant_viewpoint(happy_percentage, sad_percentage,
+                                      neutral_percentage)
 
 
 def main():
@@ -220,7 +268,7 @@ def main():
     parser.add_argument('-v', '--viewpoint', default=False, action='store_true',
                         help='Shows the predominant viewpoint.')
 
-    parser.add_argument('-y', '--year', type=int, choices=range(2000, 2021),
+    parser.add_argument('-y', '--year', type=int, choices=range(2000, 2022),
                         metavar='Range: 2000-2021', default=False,
                         help='Shows the predominant viewpoint, filtered by'
                              'year')
@@ -229,12 +277,7 @@ def main():
 
     if args.feelings:
 
-        if not args.viewpoint:
-            print("viewpoint == false")
-        if not args.year:
-            print("year == false")
-
-        print("will search for viewpoints about:", args.topic)
+        print("Search for viewpoints about:", args.topic)
         dict_json = create_json_dict(args.topic)
         df_articles = group_articles(dict_json, args.topic)
 
@@ -243,7 +286,6 @@ def main():
         display_viewpoints(df_articles, args.topic, args.viewpoint, args.year)
 
     else:
-        print("Shows only sources, not feelings:", args.topic)
         dict_json = create_json_dict(args.topic)
         find_sources(dict_json)
 
