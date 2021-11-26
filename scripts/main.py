@@ -7,17 +7,19 @@ import argparse
 import sys
 
 
-def insert_dummy_entries(articles_df,topic_name):
+def insert_dummy_entries(articles_df, topic_name):
 
-    temp_str = 'sad happy excited sad sad sad' # 4 sad , 2 happy
-    temp_str2 = 'sad happy excited sad sad sad happy happy happy excited' # 4 sad , 6 happy
+    # 4 sad emotions, 2 happy -> Viewpoint = Sad
+    temp_str = 'sad happy excited sad sad sad'
+
+    # 4 sad emotions, 6 happy -> Viewpoint = Happy
+    temp_str2 = 'sad happy excited sad sad sad happy happy happy excited'
 
     temp_df = pd.DataFrame([{'Title': 'mine1',
                              'Source_name': 'mine1',
                              'Description': 'mine1',
                              'Date': 'mine1',
                              'Content': temp_str,
-                             # lowercase for str compare later
                              'url': 'oeo',
                              'Topic': topic_name,
                              'Viewpoint': 'Neutral',
@@ -32,7 +34,6 @@ def insert_dummy_entries(articles_df,topic_name):
                              'Description': 'mine1',
                              'Date': 'mine1',
                              'Content': temp_str2,
-                             # lowercase for str compare later
                              'url': 'oeo',
                              'Topic': topic_name,
                              'Viewpoint': 'Neutral',
@@ -49,9 +50,9 @@ def create_json_dict(topic_name):
     url = ('https://newsapi.org/v2/everything?'
            'q=' + topic_name + '&'
            # 'q=(brexit AND people AND feel)&'
-                               'from=2021-11-22&'
-                               'sortBy=popularity&'
-                               'apiKey=407badbfe4a44c1089a0dfa35ecf26ee')
+           'from=2021-11-22&'
+           'sortBy=popularity&'
+           'apiKey=407badbfe4a44c1089a0dfa35ecf26ee')
 
     response = requests.get(url)
     json_dict = response.json()
@@ -131,6 +132,9 @@ def group_articles(json_dict, topic_name):
 
 
 def find_viewpoint(articles_df):
+
+    # 2 Categories of emotions
+    # Searching for them in article.content and count them
     happy_emotions = ['happy', 'excited', 'good', 'amazing', 'better',
                       'beneficial', 'joy']
     sad_emotions = ['sad', 'bad', 'unhappy', 'depressed', 'miserable',
@@ -141,6 +145,10 @@ def find_viewpoint(articles_df):
 
     articles_df['Happy_counter'] = articles_df.Content.str.count(happy_pattern)
     articles_df['Sad_counter'] = articles_df.Content.str.count(sad_pattern)
+
+    # If Happy_emotions.count() > Sad_emotions.count() => Viewpoint = Happy
+    # If Happy_emotions.count() < Sad_emotions.count() => Viewpoint = Sad
+    # If Happy_emotions.count() = Sad_emotions.count() => Viewpoint = Neutral
 
     articles_df.loc[articles_df['Happy_counter'] > articles_df[
         'Sad_counter'], 'Viewpoint'] = 'Happy'
@@ -183,18 +191,18 @@ def main():
         if not args.year:
             print("year == false")
 
-        print("will search for topic points of view = ", args.topic)
-        json_dict = create_json_dict(args.topic)
-        articles_df = group_articles(json_dict, args.topic)
+        print("will search for viewpoints about:", args.topic)
+        dict_json = create_json_dict(args.topic)
+        df_articles = group_articles(dict_json, args.topic)
 
-        print(type(articles_df))
-        print(articles_df)
-        display_viewpoints(articles_df)
+        print(type(df_articles))
+        print(df_articles)
+        display_viewpoints(df_articles)
 
     else:
         print("Shows only sources, not feelings:", args.topic)
-        json_dict = create_json_dict(args.topic)
-        find_sources(json_dict)
+        dict_json = create_json_dict(args.topic)
+        find_sources(dict_json)
 
 
 if __name__ == '__main__':
