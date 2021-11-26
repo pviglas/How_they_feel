@@ -61,9 +61,9 @@ def create_json_dict(topic_name):
     url = ('https://newsapi.org/v2/everything?'
            'q=' + topic_name + '&'
            # 'q=(brexit AND people AND feel)&'
-           'from=2021-11-22&'
-           'sortBy=popularity&'
-           'apiKey=407badbfe4a44c1089a0dfa35ecf26ee')
+                               'from=2021-11-22&'
+                               'sortBy=popularity&'
+                               'apiKey=407badbfe4a44c1089a0dfa35ecf26ee')
 
     response = requests.get(url)
     json_dict = response.json()
@@ -119,7 +119,8 @@ def group_articles(json_dict, topic_name):
                                  'Source_name': source_name,
                                  'Description': description,
                                  'Date': publication_date,
-                                 'Content': content.lower(),  # lowercase for string match later
+                                 'Content': content.lower(),
+                                 # lowercase for string match later
                                  'url': url,
                                  'Topic': topic_name,
                                  'Viewpoint': 'Neutral',  # Default = Neutral
@@ -137,7 +138,6 @@ def group_articles(json_dict, topic_name):
 
 
 def find_viewpoint(articles_df):
-
     # 2 Categories of emotions
     # Searching for them in article.Content and count them
     happy_emotions = ['happy', 'excited', 'good', 'amazing', 'better',
@@ -165,14 +165,14 @@ def find_viewpoint(articles_df):
 
 
 def display_viewpoints(articles_df, topic_name):
-
     number_of_articles = articles_df.shape[0]
-    happy_counter = len(articles_df[articles_df['Viewpoint'].str.match('Happy')])
+    happy_counter = len(
+        articles_df[articles_df['Viewpoint'].str.match('Happy')])
     sad_counter = len(articles_df[articles_df['Viewpoint'].str.match('Sad')])
-    neutral_counter = number_of_articles - (happy_counter+sad_counter)
+    neutral_counter = number_of_articles - (happy_counter + sad_counter)
 
-    happy_percentage = (happy_counter/number_of_articles)*100
-    sad_percentage = (sad_counter/number_of_articles)*100
+    happy_percentage = (happy_counter / number_of_articles) * 100
+    sad_percentage = (sad_counter / number_of_articles) * 100
     neutral_percentage = (neutral_counter / number_of_articles) * 100
 
     print("Number of articles:", number_of_articles)
@@ -186,7 +186,13 @@ def display_viewpoints(articles_df, topic_name):
     pie_labels = ["Happy", "Sad", "Neutral"]
     pie_explode = [0.2, 0, 0]
 
-    plt.pie(y, labels=pie_labels, explode=pie_explode)
+    pie_labes_percentage = [str("%.2f" % happy_percentage) + "% " + "Happy",
+                            str("%.2f" % sad_percentage) + "% " + "Sad",
+                            str("%.2f" % neutral_percentage) + "% " + "Neutral"]
+
+    plt.title("Viewpoints about " + topic_name + ":")
+    plt.pie(y, labels=pie_labes_percentage, explode=pie_explode)
+
     plt.show()
 
 
@@ -230,7 +236,7 @@ def main():
         dict_json = create_json_dict(args.topic)
         find_sources(dict_json)
 
+
 #
 if __name__ == '__main__':
     main()
-
