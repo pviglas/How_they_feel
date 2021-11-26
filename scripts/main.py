@@ -114,10 +114,11 @@ def main():
 
     parser.add_argument('-v', '--viewpoint', type=str, choices=['happy', 'sad',
                                                                 'neutral'],
+                        default=False,
                         help='Shows articles that match the viewpoint.')
 
     parser.add_argument('-y', '--year', type=int, choices=range(2000, 2021),
-                        metavar='Range: 2000-2021',
+                        metavar='Range: 2000-2021', default=False,
                         help='Shows articles for the given year.')
 
     args = parser.parse_args()
@@ -125,6 +126,12 @@ def main():
     print("args print:", args.topic)
 
     if args.feelings:
+
+        if not args.viewpoint:
+            print("viewpoint == false")
+        if not args.year:
+            print("year == false")
+
         print("will search for topic points of view = ", args.topic)
         json_dict = create_json_dict(args.topic)
         articles_df = group_articles(json_dict, args.topic)
