@@ -11,13 +11,12 @@ import sys
 
 
 def create_json_dict(topic_name):
-
     url = ('https://newsapi.org/v2/everything?'
-           'q='+topic_name+'&'
+           'q=' + topic_name + '&'
            # 'q=(brexit AND people AND feel)&'
-           'from=2021-11-22&'
-           'sortBy=popularity&'
-           'apiKey=407badbfe4a44c1089a0dfa35ecf26ee')
+                               'from=2021-11-22&'
+                               'sortBy=popularity&'
+                               'apiKey=407badbfe4a44c1089a0dfa35ecf26ee')
 
     response = requests.get(url)
     json_dict = response.json()
@@ -27,8 +26,7 @@ def create_json_dict(topic_name):
 
 
 def find_sources(json_dict):
-
-    article_list = json_dict['articles']    # Extract articles from json_dict
+    article_list = json_dict['articles']  # Extract articles from json_dict
     sources_list = []
 
     for article in article_list:
@@ -61,7 +59,6 @@ def find_sources(json_dict):
 
 
 def group_articles(json_dict, topic_name):
-
     articles_list = json_dict['articles']  # Extract articles from json_dict
     articles_df = pd.DataFrame()
 
@@ -73,16 +70,19 @@ def group_articles(json_dict, topic_name):
         description = str(article['description'])
         url = str(article['url'])
         publication_date = str(article['publishedAt'])
-        content = str(article['content'])
+        content = str(article['content'])  # truncated to 200 chars, by the api
 
         temp_df = pd.DataFrame([{'Title': title,
                                  'Source_name': source_name,
                                  'Description': description,
                                  'Date': publication_date,
-                                 'Content': content,
+                                 'Content': content.lower(),
+                                 # lowercase for str compare later
                                  'url': url,
                                  'Topic': topic_name,
-                                 'Viewpoint': 'Neutral'}  # Default = Neutral
+                                 'Viewpoint': 'Neutral',
+                                 'Happy_counter': 0,
+                                 'Sad_counter': 0}  # Default = Neutral
                                 ])
 
         articles_df = articles_df.append(temp_df, ignore_index=True)
@@ -94,22 +94,24 @@ def group_articles(json_dict, topic_name):
 
     return articles_df
 
+
+def count_strings(X, y):
+    pattern = r'\b{}\b'.format('|'.join(y))
+    return X['text'].str.count(pattern)
+
+
 def find_viewpoint(articles_df):
-    import pandas as pd
-
-
-    y = ['pen', 'pineapple']
-
-    def count_strings(X, y):
-        pattern = r'\b{}\b'.format('|'.join(y))
-        return X['text'].str.count(pattern)
+    happy_emotions = ['happy', '']  # y
+    sad_emotions = []  # y
 
     string_transformer = sk.preprocessing.FunctionTransformer(count_strings,
-                                                              kw_args={'y': y})
-    df['count'] = string_transformer.fit_transform(X=df)
+                                                              kw_args={
+                                                            'y': happy_emotions})
+
+    # df['count'] = string_transformer.fit_transform(X=df)
+
 
 def main():
-
     parser = argparse.ArgumentParser(description='Search for a topic.')
     parser.add_argument('topic', type=str, help='Given topic name.')
     parser.add_argument('-f', '--feelings', action='store_true',
