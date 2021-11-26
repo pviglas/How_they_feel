@@ -1,13 +1,24 @@
 import requests
 import json
 import pandas as pd
-# from pandas import DataFrame
-import urllib
 import argparse
-import sys
+import matplotlib.pyplot as plt
+import numpy as np
 
 
 def insert_dummy_entries(articles_df, topic_name):
+    """
+     Function for testing purposes.
+     The article.Content is truncated to 200 chars by the api, so we cannot
+     search the whole article and scan every word one by one.
+     Because of that (usually) the article.Happy_counter(s) and
+     article.Sad_counter(s) remain 0 and this has as a result all the
+     article.Viewpoint(s) remain to default(=Neutral), too.
+
+     Testing solution:
+     We can insert some dummy entries, which contain synonyms of sad/happy on
+     the article.Content, in order to test the code and check the results.
+    """
 
     # 4 sad emotions, 2 happy -> Viewpoint = Sad
     temp_str = 'sad happy excited sad sad sad'
@@ -15,30 +26,30 @@ def insert_dummy_entries(articles_df, topic_name):
     # 4 sad emotions, 6 happy -> Viewpoint = Happy
     temp_str2 = 'sad happy excited sad sad sad happy happy happy excited'
 
-    temp_df = pd.DataFrame([{'Title': 'mine1',
-                             'Source_name': 'mine1',
-                             'Description': 'mine1',
-                             'Date': 'mine1',
+    temp_df = pd.DataFrame([{'Title': 'dummy_1',
+                             'Source_name': 'dummy_1',
+                             'Description': 'dummy_1',
+                             'Date': '2021',
                              'Content': temp_str,
-                             'url': 'oeo',
+                             'url': 'dummy_url',
                              'Topic': topic_name,
-                             'Viewpoint': 'Neutral',
+                             'Viewpoint': 'Neutral',  # Default = Neutral
                              'Happy_counter': 0,
-                             'Sad_counter': 0}  # Default = Neutral
+                             'Sad_counter': 0}
                             ])
 
     articles_df = articles_df.append(temp_df, ignore_index=True)
 
-    temp_df = pd.DataFrame([{'Title': 'mine2',
-                             'Source_name': 'mine1',
-                             'Description': 'mine1',
-                             'Date': 'mine1',
+    temp_df = pd.DataFrame([{'Title': 'dummy_2',
+                             'Source_name': 'dummy_2',
+                             'Description': 'dummy_2',
+                             'Date': '2021',
                              'Content': temp_str2,
-                             'url': 'oeo',
+                             'url': 'dummy_url',
                              'Topic': topic_name,
-                             'Viewpoint': 'Neutral',
+                             'Viewpoint': 'Neutral',  # Default = Neutral
                              'Happy_counter': 0,
-                             'Sad_counter': 0}  # Default = Neutral
+                             'Sad_counter': 0}
                             ])
 
     articles_df = articles_df.append(temp_df, ignore_index=True)
@@ -56,7 +67,6 @@ def create_json_dict(topic_name):
 
     response = requests.get(url)
     json_dict = response.json()
-    # print(json_dict)
 
     return json_dict
 
@@ -90,7 +100,6 @@ def find_sources(json_dict):
         'sources': sources_list
     }
 
-    # print(topic_info_dict)
     print(json.dumps(topic_info_dict, indent=2, sort_keys=False))
 
 
@@ -99,8 +108,6 @@ def group_articles(json_dict, topic_name):
     articles_df = pd.DataFrame()
 
     for article in articles_list:
-        # print(type(article))
-        # print(article)
         source_name = str(article['source']['name'])
         title = str(article['title'])
         description = str(article['description'])
@@ -112,21 +119,19 @@ def group_articles(json_dict, topic_name):
                                  'Source_name': source_name,
                                  'Description': description,
                                  'Date': publication_date,
-                                 'Content': content.lower(),
-                                 # lowercase for str compare later
+                                 'Content': content.lower(),  # lowercase for string match later
                                  'url': url,
                                  'Topic': topic_name,
-                                 'Viewpoint': 'Neutral',
+                                 'Viewpoint': 'Neutral',  # Default = Neutral
                                  'Happy_counter': 0,
-                                 'Sad_counter': 0}  # Default = Neutral
+                                 'Sad_counter': 0}
                                 ])
 
         articles_df = articles_df.append(temp_df, ignore_index=True)
-        # print("\nAfter insert: \n")
-        # print(article_df)
 
-    # print("\nFinal article_df: \n")
-    # print(article_df)
+    # Uncomment the next line of code, to run the testing_function and check
+    # the results
+    articles_df = insert_dummy_entries(articles_df, topic_name)
 
     return articles_df
 
@@ -134,7 +139,7 @@ def group_articles(json_dict, topic_name):
 def find_viewpoint(articles_df):
 
     # 2 Categories of emotions
-    # Searching for them in article.content and count them
+    # Searching for them in article.Content and count them
     happy_emotions = ['happy', 'excited', 'good', 'amazing', 'better',
                       'beneficial', 'joy']
     sad_emotions = ['sad', 'bad', 'unhappy', 'depressed', 'miserable',
@@ -159,9 +164,30 @@ def find_viewpoint(articles_df):
     return articles_df
 
 
-def display_viewpoints(articles_df):
-    happy = len(articles_df[articles_df['Viewpoint'].str.match('Happy')])
-    print("happy articles: ", happy)
+def display_viewpoints(articles_df, topic_name):
+
+    number_of_articles = articles_df.shape[0]
+    happy_counter = len(articles_df[articles_df['Viewpoint'].str.match('Happy')])
+    sad_counter = len(articles_df[articles_df['Viewpoint'].str.match('Sad')])
+    neutral_counter = number_of_articles - (happy_counter+sad_counter)
+
+    happy_percentage = (happy_counter/number_of_articles)*100
+    sad_percentage = (sad_counter/number_of_articles)*100
+    neutral_percentage = (neutral_counter / number_of_articles) * 100
+
+    print("Number of articles:", number_of_articles)
+    print("Viewpoints about " + topic_name + ":")
+    print("%.2f" % happy_percentage + "% Happy")
+    print("%.2f" % sad_percentage + "% Sad")
+    print("%.2f" % neutral_percentage + "% Neutral ")
+
+    # Graphic representation
+    y = np.array([happy_percentage, sad_percentage, neutral_percentage])
+    pie_labels = ["Happy", "Sad", "Neutral"]
+    pie_explode = [0.2, 0, 0]
+
+    plt.pie(y, labels=pie_labels, explode=pie_explode)
+    plt.show()
 
 
 def main():
@@ -195,9 +221,9 @@ def main():
         dict_json = create_json_dict(args.topic)
         df_articles = group_articles(dict_json, args.topic)
 
-        print(type(df_articles))
+        find_viewpoint(df_articles)
         print(df_articles)
-        display_viewpoints(df_articles)
+        display_viewpoints(df_articles, args.topic)
 
     else:
         print("Shows only sources, not feelings:", args.topic)
