@@ -279,7 +279,6 @@ def main():
         df_articles = group_articles(dict_json, args.topic)
 
         find_viewpoint(df_articles)
-        print(df_articles)
         display_viewpoints(df_articles, args.topic, args.viewpoint, args.year)
 
     else:
