@@ -62,7 +62,6 @@ def insert_dummy_entries(articles_df, topic_name):
 def create_json_dict(topic_name):
     url = ('https://newsapi.org/v2/everything?'
            'q=' + topic_name + '&'
-           # 'q=(brexit AND people AND feel)&'
                                'from=2021-11-22&'
                                'sortBy=popularity&'
                                'apiKey=407badbfe4a44c1089a0dfa35ecf26ee')
@@ -144,7 +143,6 @@ def group_articles(json_dict, topic_name):
 
 
 def find_viewpoint(articles_df):
-
     # 2 Categories of emotions
     # Searching for them in article.Content and count them
     happy_emotions = ['happy', 'excited', 'good', 'amazing', 'better',
@@ -173,7 +171,6 @@ def find_viewpoint(articles_df):
 
 # Filter DataFrame, by given year
 def return_selected_year(articles_df, given_year):
-
     given_year = str(given_year)
     year_df = articles_df[articles_df['Date'].str.match(given_year)]
     print(year_df)
@@ -182,7 +179,6 @@ def return_selected_year(articles_df, given_year):
 
 
 def display_predominant_viewpoint(happy, sad, neutral):
-
     if (happy >= sad) and (happy >= neutral):
         print("- Most people are Happy, %.2f" % happy + "%")
     elif (sad >= happy) and (sad >= neutral):
@@ -193,7 +189,6 @@ def display_predominant_viewpoint(happy, sad, neutral):
 
 
 def find_emotion_counters(articles_df):
-
     number_of_articles = articles_df.shape[0]
     happy_counter = len(
         articles_df[articles_df['Viewpoint'].str.match('Happy')])
@@ -205,7 +200,6 @@ def find_emotion_counters(articles_df):
 
 def display_viewpoints(articles_df, topic_name, selected_emotion,
                        selected_year):
-
     emotion_counters = find_emotion_counters(articles_df)
     articles_count = emotion_counters[0]
     happy_count = emotion_counters[1]
@@ -223,13 +217,14 @@ def display_viewpoints(articles_df, topic_name, selected_emotion,
         print("%.2f" % sad_percentage + "% Sad")
         print("%.2f" % neutral_percentage + "% Neutral ")
 
-        # Graphic representation
+        # Graphical representation
         y = np.array([happy_percentage, sad_percentage, neutral_percentage])
 
-        pie_labels_percentage = [str("%.2f" % happy_percentage) + "% " + "Happy",
-                                 str("%.2f" % sad_percentage) + "% " + "Sad",
-                                 str("%.2f" % neutral_percentage) + "% " +
-                                 "Neutral"]
+        pie_labels_percentage = [
+            str("%.2f" % happy_percentage) + "% " + "Happy",
+            str("%.2f" % sad_percentage) + "% " + "Sad",
+            str("%.2f" % neutral_percentage) + "% " +
+            "Neutral"]
         pie_explode = [0.1, 0.1, 0.1]
 
         plt.title("Viewpoints about " + topic_name + ":")
@@ -267,7 +262,8 @@ def main():
     parser.add_argument('-f', '--feelings', default=False, action='store_true',
                         help='Searching for viewpoints, about the topic.')
 
-    parser.add_argument('-v', '--viewpoint', default=False, action='store_true',
+    parser.add_argument('-v', '--viewpoint', default=False,
+                        action='store_true',
                         help='Shows the predominant viewpoint.')
 
     parser.add_argument('-y', '--year', type=int, choices=range(2020, 2022),
