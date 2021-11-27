@@ -173,7 +173,6 @@ def find_viewpoint(articles_df):
 def return_selected_year(articles_df, given_year):
     given_year = str(given_year)
     year_df = articles_df[articles_df['Date'].str.match(given_year)]
-    print(year_df)
 
     return year_df
 
